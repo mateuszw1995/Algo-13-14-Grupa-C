@@ -1,0 +1,23 @@
+﻿Kompilacja rozpoczęła się 2013-11-13 10:25:54.
+     1>Projekt „C:\Users\Mateusz\Desktop\Rozpoznawanie obrazu\Rozpoznawanie obrazu\Rozpoznawanie obrazu.vcxproj” w węźle 2 (elementy docelowe: Build).
+       Plik projektu zawiera atrybut ToolsVersion="12.0". Ten zestaw narzędzi jest nieznany lub nieobecny. Być może problem uda się rozwiązać przez zainstalowanie wersji oprogramowania .NET Framework odpowiedniej dla tego zestawu narzędzi. Projekt zostanie potraktowany tak, jakby zawierał parametr ToolsVersion="4.0".
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
+         main.cpp
+     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(53): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(60): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(211): warning C4244: "return" : konwersja z "double" do "int", możliwa utrata danych
+     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(361): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(362): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(364): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(365): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Mateusz\Desktop\Rozpoznawanie obrazu\Debug\Rozpoznawanie obrazu.exe" /INCREMENTAL /NOLOGO Gdiplus.lib OpenGL32.lib SOIL.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Mateusz\Desktop\Rozpoznawanie obrazu\Debug\Rozpoznawanie obrazu.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Mateusz\Desktop\Rozpoznawanie obrazu\Debug\Rozpoznawanie obrazu.lib" /MACHINE:X86 Debug\image.obj
+         Debug\math.obj
+         Debug\main.obj
+         Rozpoznawanie obrazu.vcxproj -> C:\Users\Mateusz\Desktop\Rozpoznawanie obrazu\Debug\Rozpoznawanie obrazu.exe
+     1>Kompilowanie projektu „C:\Users\Mateusz\Desktop\Rozpoznawanie obrazu\Rozpoznawanie obrazu\Rozpoznawanie obrazu.vcxproj” wykonane (elementy docelowe: Build).
+
+Kompilacja powiodła się.
+
+Czas, który upłynął: 00:00:03.83
