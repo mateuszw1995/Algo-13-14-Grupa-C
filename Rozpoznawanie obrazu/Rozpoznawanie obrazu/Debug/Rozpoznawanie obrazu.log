@@ -1,25 +1,25 @@
-﻿Kompilacja rozpoczęła się 2013-12-18 11:45:12.
-     1>Projekt „C:\Users\Mateusz\Desktop\Rozpoznawanie obrazu\Rozpoznawanie obrazu\Rozpoznawanie obrazu.vcxproj” w węźle 2 (elementy docelowe: Build).
+﻿Kompilacja rozpoczęła się 2013-12-18 23:04:37.
+     1>Projekt „C:\Users\Mateusz\Documents\GitHub\Algo-13-14-Grupa-C\Rozpoznawanie obrazu\Rozpoznawanie obrazu\Rozpoznawanie obrazu.vcxproj” w węźle 2 (elementy docelowe: Build).
        Plik projektu zawiera atrybut ToolsVersion="12.0". Ten zestaw narzędzi jest nieznany lub nieobecny. Być może problem uda się rozwiązać przez zainstalowanie wersji oprogramowania .NET Framework odpowiedniej dla tego zestawu narzędzi. Projekt zostanie potraktowany tak, jakby zawierał parametr ToolsVersion="4.0".
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
          main.cpp
-     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(80): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
-     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(87): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
-     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(160): warning C4244: "return" : konwersja z "double" do "int", możliwa utrata danych
-     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(353): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
-     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(354): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
-     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(363): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
-     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(364): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
-     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(366): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
-     1>c:\users\mateusz\desktop\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(368): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+     1>c:\users\mateusz\documents\github\algo-13-14-grupa-c\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(82): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+     1>c:\users\mateusz\documents\github\algo-13-14-grupa-c\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(89): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+     1>c:\users\mateusz\documents\github\algo-13-14-grupa-c\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(162): warning C4244: "return" : konwersja z "double" do "int", możliwa utrata danych
+     1>c:\users\mateusz\documents\github\algo-13-14-grupa-c\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(318): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+     1>c:\users\mateusz\documents\github\algo-13-14-grupa-c\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(319): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+     1>c:\users\mateusz\documents\github\algo-13-14-grupa-c\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(321): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+     1>c:\users\mateusz\documents\github\algo-13-14-grupa-c\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(323): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+     1>c:\users\mateusz\documents\github\algo-13-14-grupa-c\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(468): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+     1>c:\users\mateusz\documents\github\algo-13-14-grupa-c\rozpoznawanie obrazu\rozpoznawanie obrazu\main.cpp(469): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Mateusz\Desktop\Rozpoznawanie obrazu\Debug\Rozpoznawanie obrazu.exe" /INCREMENTAL /NOLOGO Gdiplus.lib OpenGL32.lib SOIL.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Mateusz\Desktop\Rozpoznawanie obrazu\Debug\Rozpoznawanie obrazu.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Mateusz\Desktop\Rozpoznawanie obrazu\Debug\Rozpoznawanie obrazu.lib" /MACHINE:X86 Debug\image.obj
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Mateusz\Documents\GitHub\Algo-13-14-Grupa-C\Rozpoznawanie obrazu\Debug\Rozpoznawanie obrazu.exe" /INCREMENTAL /NOLOGO Gdiplus.lib OpenGL32.lib SOIL.lib msimg32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Mateusz\Documents\GitHub\Algo-13-14-Grupa-C\Rozpoznawanie obrazu\Debug\Rozpoznawanie obrazu.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Mateusz\Documents\GitHub\Algo-13-14-Grupa-C\Rozpoznawanie obrazu\Debug\Rozpoznawanie obrazu.lib" /MACHINE:X86 Debug\image.obj
          Debug\math.obj
          Debug\main.obj
-         Rozpoznawanie obrazu.vcxproj -> C:\Users\Mateusz\Desktop\Rozpoznawanie obrazu\Debug\Rozpoznawanie obrazu.exe
-     1>Kompilowanie projektu „C:\Users\Mateusz\Desktop\Rozpoznawanie obrazu\Rozpoznawanie obrazu\Rozpoznawanie obrazu.vcxproj” wykonane (elementy docelowe: Build).
+         Rozpoznawanie obrazu.vcxproj -> C:\Users\Mateusz\Documents\GitHub\Algo-13-14-Grupa-C\Rozpoznawanie obrazu\Debug\Rozpoznawanie obrazu.exe
+     1>Kompilowanie projektu „C:\Users\Mateusz\Documents\GitHub\Algo-13-14-Grupa-C\Rozpoznawanie obrazu\Rozpoznawanie obrazu\Rozpoznawanie obrazu.vcxproj” wykonane (elementy docelowe: Build).
 
 Kompilacja powiodła się.
 
-Czas, który upłynął: 00:00:05.69
+Czas, który upłynął: 00:00:02.86

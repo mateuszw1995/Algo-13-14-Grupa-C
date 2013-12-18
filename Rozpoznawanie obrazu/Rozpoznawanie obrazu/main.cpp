@@ -1,6 +1,7 @@
 ﻿#pragma once
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+#define WINVER 0x0600
 #define _USE_MATH_DEFINES
 #include "img/image.h"
 #include <windows.h>
@@ -29,13 +30,14 @@ HWND hCheckboxObraz;
 HWND hStaticInfo, hStaticObraz, hStaticWzor, hStaticTolerancja;
 HWND hButtonTrackbarTolerancja;
 HFONT hNormalFont;
+HDC hdc_obraz, hdc_dopasowanie, hdc_kwadraty;
 
 char sSciezkaObraz[MAX_PATH] = "";
 char sSciezkaWzor[MAX_PATH] = "";
 char sNazwaPlikuObraz[MAX_PATH] = "";
 char sNazwaPlikuWzor[MAX_PATH] = "";
 
-BOOL ObrazWybrany = FALSE, WzorWybrany = FALSE, Zakonczono = FALSE, WybranoDopasowanie = TRUE;
+BOOL ObrazWybrany = FALSE, WzorWybrany = FALSE, Zakonczono = FALSE, WybranoDopasowanie = TRUE, PrzeliczKwadraty = TRUE;
 INT tolerancja = 20;
 image obraz,wzorzec;
 double tekst[1000][1000];
@@ -303,6 +305,37 @@ void rozpoznawaj(HWND hwnd)
 	InvalidateRect(hwnd, NULL, TRUE);
 }
 
+void generuj_kwadaraty(HWND hwnd)
+{
+	HDC hdc = GetDC(hwnd);
+	hdc_kwadraty=CreateCompatibleDC(hdc);
+	HBITMAP bitmapa2 = CreateCompatibleBitmap(hdc,tekst_w,tekst_h);
+	ReleaseDC(hwnd, hdc);
+	DeleteObject(SelectObject(hdc_kwadraty,bitmapa2));
+	HPEN Olowek, Piornik;
+	Olowek = CreatePen(PS_SOLID, 1, 0x00FF00);
+	Piornik = (HPEN)SelectObject(hdc_kwadraty, Olowek);
+	for(int y = 0; y < odchylenie.size() - wzor_w; ++y)
+		for(int x = 0; x < odchylenie[y].size() - wzor_h; ++x)
+			if(wyswietl(y, x) < tolerancja 
+				&& x+1 < odchylenie[y].size() - wzor_h && wyswietl(y, x+1) > wyswietl(y, x) 
+				&& x-1 >= 0 && wyswietl(y, x-1) > wyswietl(y, x) 
+				&& y+1 < odchylenie.size() - wzor_w && wyswietl(y+1, x) > wyswietl(y, x) 
+				&& y-1 >= 0 && wyswietl(y-1, x) > wyswietl(y, x))
+			{
+				MoveToEx(hdc_kwadraty, y-wzor_w/2+wzor_w/2, x-wzor_h/2+wzor_h/2, NULL);
+				LineTo(hdc_kwadraty, y-wzor_w/2+wzor_w/2, x+wzor_h/2+1+wzor_h/2);
+				MoveToEx(hdc_kwadraty, y+wzor_w/2+wzor_w/2, x-wzor_h/2+wzor_h/2, NULL);
+				LineTo(hdc_kwadraty, y+wzor_w/2+wzor_w/2, x+wzor_h/2+1+wzor_h/2);
+				MoveToEx(hdc_kwadraty, y-wzor_w/2+wzor_w/2, x-wzor_h/2+wzor_h/2, NULL);
+				LineTo(hdc_kwadraty, y+wzor_w/2+1+wzor_w/2, x-wzor_h/2+wzor_h/2);
+				MoveToEx(hdc_kwadraty, y-wzor_w/2+wzor_w/2, x+wzor_h/2+wzor_h/2, NULL);
+				LineTo(hdc_kwadraty, y+wzor_w/2+1+wzor_w/2, x+wzor_h/2+wzor_h/2);
+			}
+	SelectObject(hdc_kwadraty, Piornik);
+	DeleteObject(Olowek);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch(msg)
@@ -349,36 +382,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		HDC hdc=BeginPaint(hwnd, &ps);
 		if(Zakonczono)
 		{
+			HDC hdc_pamieciowy=CreateCompatibleDC(hdc);
+			HBITMAP bitmapa = CreateCompatibleBitmap(hdc,tekst_w,tekst_h);
+			DeleteObject(SelectObject(hdc_pamieciowy,bitmapa));
 			if(WybranoDopasowanie)
-				for(int y = 0; y < odchylenie.size() - wzor_h; ++y)
-					for(int x = 0; x < odchylenie[y].size() - wzor_w; ++x)
-						SetPixel(hdc, y+OBRAZ_X, x+OBRAZ_Y, RGB(wyswietl(y, x), wyswietl(y, x), wyswietl(y, x)));
+				BitBlt(hdc_pamieciowy, wzor_w/2, wzor_h/2, odchylenie.size() - wzor_h, odchylenie[1].size() - wzor_w, hdc_dopasowanie, 0, 0, SRCCOPY);
 			else
-				for(int y = 0; y < tekst_h; ++y)
-					for(int x = 0; x < tekst_w; ++x)
-						SetPixel(hdc, y+OBRAZ_X, x+OBRAZ_Y, RGB(tekst[x][y]*255, tekst[x][y]*255, tekst[x][y]*255));
-			HPEN Olowek, Piornik;
-			Olowek = CreatePen(PS_SOLID, 1, 0x00FF00);
-			Piornik = (HPEN)SelectObject(hdc, Olowek);
-			for(int y = 0; y < odchylenie.size() - wzor_w; ++y)
-				for(int x = 0; x < odchylenie[y].size() - wzor_h; ++x)
-					if(wyswietl(y, x) < tolerancja 
-						&& x+1 < odchylenie[y].size() - wzor_h && wyswietl(y, x+1) > wyswietl(y, x) 
-						&& x-1 >= 0 && wyswietl(y, x-1) > wyswietl(y, x) 
-						&& y+1 < odchylenie.size() - wzor_w && wyswietl(y+1, x) > wyswietl(y, x) 
-						&& y-1 >= 0 && wyswietl(y-1, x) > wyswietl(y, x))
-					{
-						MoveToEx(hdc, y-wzor_w/2+OBRAZ_X, x-wzor_h/2+OBRAZ_Y, NULL);
-						LineTo(hdc, y-wzor_w/2+OBRAZ_X, x+wzor_h/2+1+OBRAZ_Y);
-						MoveToEx(hdc, y+wzor_w/2+OBRAZ_X, x-wzor_h/2+OBRAZ_Y, NULL);
-						LineTo(hdc, y+wzor_w/2+OBRAZ_X, x+wzor_h/2+1+OBRAZ_Y);
-						MoveToEx(hdc, y-wzor_w/2+OBRAZ_X, x-wzor_h/2+OBRAZ_Y, NULL);
-						LineTo(hdc, y+wzor_w/2+1+OBRAZ_X, x-wzor_h/2+OBRAZ_Y);
-						MoveToEx(hdc, y-wzor_w/2+OBRAZ_X, x+wzor_h/2+OBRAZ_Y, NULL);
-						LineTo(hdc, y+wzor_w/2+1+OBRAZ_X, x+wzor_h/2+OBRAZ_Y);
-					}
-			SelectObject(hdc, Piornik);
-			DeleteObject(Olowek);
+				BitBlt(hdc_pamieciowy, 0, 0, tekst_w, tekst_h, hdc_obraz, 0, 0, SRCCOPY);
+			TransparentBlt(hdc_pamieciowy, 0, 0, tekst_w, tekst_h, hdc_kwadraty, 0, 0, tekst_w, tekst_h, 0);
+			BitBlt(hdc, OBRAZ_X, OBRAZ_Y, tekst_w, tekst_h, hdc_pamieciowy, 0, 0, SRCCOPY);
+			DeleteDC(hdc_pamieciowy);
 		}
 		EndPaint(hwnd, &ps);
 		break;
@@ -441,6 +454,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				wzor_w = wzorzec.get_size().w;
 				wzor_h = wzorzec.get_size().h;
 				rozpoznawaj(hwnd);
+				generuj_kwadaraty(hwnd);
+				HDC hdc=GetDC(hwnd);
+				hdc_obraz=CreateCompatibleDC(hdc);
+				HBITMAP bitmapa = CreateCompatibleBitmap(hdc,tekst_w,tekst_h);
+				DeleteObject(SelectObject(hdc_obraz,bitmapa));
+				for(int y = 0; y < tekst_h; ++y)
+					for(int x = 0; x < tekst_w; ++x)
+						SetPixel(hdc_obraz, x, y, RGB(tekst[x][y]*255, tekst[x][y]*255, tekst[x][y]*255));
+				hdc_dopasowanie=CreateCompatibleDC(hdc);
+				HBITMAP bitmapa2 = CreateCompatibleBitmap(hdc,tekst_w,tekst_h);
+				DeleteObject(SelectObject(hdc_dopasowanie,bitmapa2));
+				for(int y = 0; y < odchylenie.size() - wzor_h; ++y)
+					for(int x = 0; x < odchylenie[y].size() - wzor_w; ++x)
+						SetPixel(hdc_dopasowanie, y, x, RGB(wyswietl(y, x), wyswietl(y, x), wyswietl(y, x)));
+				ReleaseDC(hwnd, hdc);
 				SetWindowText(hStaticInfo, "zakończono");
 			}
 			else
@@ -460,14 +488,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				CheckDlgButton(hwnd, ID_CHECKBOX_OBRAZ, BST_UNCHECKED);
 				WybranoDopasowanie = FALSE;
 				SetWindowText(hCheckboxObraz, "obraz");
-				InvalidateRect(hwnd, NULL, TRUE);
+				InvalidateRect(hwnd, NULL, FALSE);
 			}
 			else
 			{
 				CheckDlgButton(hwnd, ID_CHECKBOX_OBRAZ, BST_CHECKED);
 				WybranoDopasowanie = TRUE;
 				SetWindowText(hCheckboxObraz, "dopasowanie");
-				InvalidateRect(hwnd, NULL, TRUE);
+				InvalidateRect(hwnd, NULL, FALSE);
 			}
 			break;
 		}
@@ -515,12 +543,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			ss<<"tolerancja = "<<tolerancja;
 			SetWindowText(hStaticTolerancja,ss.str().c_str());
 			if(Zakonczono)
+			{
+				generuj_kwadaraty(hwnd);
 				InvalidateRect(hwnd, NULL, FALSE);
+			}
 		}
 		break;
 	}
     case WM_CLOSE:
 		image::deinit();
+		DeleteDC(hdc_obraz);
+		DeleteDC(hdc_dopasowanie);
+		DeleteDC(hdc_kwadraty);
         DestroyWindow(hwnd);
         break;
         
