@@ -23,14 +23,17 @@ using namespace std;
 
 #define OBRAZ_X 370
 #define OBRAZ_Y 5
+#define WZOR_X 265
+#define WZOR_Y 5
 
 HINSTANCE hInst;
 HWND hButtonOpenObraz, hButtonOpenWzor, hButtonStart;
 HWND hCheckboxObraz;
 HWND hStaticInfo, hStaticObraz, hStaticWzor, hStaticTolerancja;
 HWND hButtonTrackbarTolerancja;
+HWND hProgressBar;
 HFONT hNormalFont;
-HDC hdc_obraz, hdc_dopasowanie, hdc_kwadraty;
+HDC hdc_obraz, hdc_dopasowanie, hdc_kwadraty, hdc_wzor;
 
 char sSciezkaObraz[MAX_PATH] = "";
 char sSciezkaWzor[MAX_PATH] = "";
@@ -40,8 +43,8 @@ char sNazwaPlikuWzor[MAX_PATH] = "";
 BOOL ObrazWybrany = FALSE, WzorWybrany = FALSE, Zakonczono = FALSE, WybranoDopasowanie = TRUE, PrzeliczKwadraty = TRUE;
 INT tolerancja = 20;
 image obraz,wzorzec;
-double tekst[1000][1000];
-double wzor[1000][1000];
+double tekst[1500][1000][3];
+double wzor[1000][1000][3];
 
 int tekst_w, tekst_h, wzor_w, wzor_h;
 vector<vector<double> >odchylenie;
@@ -100,16 +103,16 @@ vector<complex<double> > FFT(vector<complex<double> > z, int invert, int unsigne
     return wynik;
 }
 
-double suma_wzorca()
+/*double suma_wzorca()
 {
 	double suma=0;
 	for(int y = 0; y < wzor_h; ++y)
 		for(int x = 0; x < wzor_w; ++x)
 			suma+=kw(wzor[x][y]);
 	return suma;
-}
+}*/
 
-vector<vector<double> >sumy_tekstu()
+/*vector<vector<double> >sumy_tekstu()
 {
 	vector<vector<double> > sumy_prefiksowe;
 	for(int y = 0; y < tekst_h; ++y)
@@ -140,15 +143,15 @@ vector<vector<double> >sumy_tekstu()
 		wynik.push_back(temp);
 	}
 	return wynik;
-}
+}*/
 
-double licz_odchylenie_NAPALOWE(int x, int y,int maxx, int maxy)
+double licz_odchylenie_NAPALOWE(int x, int y)
 {
 	double suma=0;
 	for(int i=0;i<wzor_w;i++)
 		for(int j=0;j<wzor_h;j++)
-			if(x+i<maxx || y+j<maxy)
-				suma+=kw((tekst[x+i][y+j]-wzor[i][j]));
+			for(int k=0;k<3;k++)
+				suma+=kw((tekst[x+i][y+j][k]-wzor[i][j][k]));
 	return suma;
 }
 
@@ -162,7 +165,7 @@ int wyswietl(int x, int y)
 	return (odchylenie[x][y] - minimum) * 255 / (maksimum - minimum);
 }
 
-void rozpoznawaj(HWND hwnd)
+void rozpoznawaj()
 {
 	/*
 	for(int y = 0; y < tekst_h; ++y)
@@ -279,19 +282,14 @@ void rozpoznawaj(HWND hwnd)
 			temp.push_back(sumy_tekstu_wynik[x][y]-2*wynik_FFT[x][y]+suma_wzorca_wynik);
 		odchylenie.push_back(temp);
 	}*/
-	for(int y = 0; y < tekst_h; ++y)
-		for (int x = 0; x < tekst_w; ++x)
-			tekst[x][y] = (*obraz(x, y, 1)) / 255.0;
-	for(int y = 0; y < wzor_h; ++y)
-		for(int x = 0; x < wzor_w; ++x)
-			wzor[x][y] = (*wzorzec(x, y, 1))/255.0;
 	odchylenie.clear();
-	for(int x = 0; x < tekst_w; ++x)
+	for(int x = 0; x < tekst_w-wzor_w; ++x)
 	{
 		vector<double>temp;
-		for(int y = 0; y < tekst_h; ++y)
-			temp.push_back(licz_odchylenie_NAPALOWE(x,y,tekst_w,tekst_h));
+		for(int y = 0; y < tekst_h-wzor_h; ++y)
+			temp.push_back(licz_odchylenie_NAPALOWE(x,y));
 		odchylenie.push_back(temp);
+		SendMessage(hProgressBar, PBM_SETPOS,(WPARAM) (x+1)*255/(tekst_w-wzor_w), 0);
 	}
 	maksimum=-2147483647;
 	minimum=2147483647;
@@ -301,36 +299,34 @@ void rozpoznawaj(HWND hwnd)
 			maksimum=max(odchylenie[x][y],maksimum);
 			minimum=min(odchylenie[x][y],minimum);
 		}
-	Zakonczono = TRUE;
-	InvalidateRect(hwnd, NULL, TRUE);
 }
 
 void generuj_kwadaraty(HWND hwnd)
 {
 	HDC hdc = GetDC(hwnd);
 	hdc_kwadraty=CreateCompatibleDC(hdc);
-	HBITMAP bitmapa2 = CreateCompatibleBitmap(hdc,tekst_w,tekst_h);
+	HBITMAP bitmapa = CreateCompatibleBitmap(hdc,tekst_w,tekst_h);
 	ReleaseDC(hwnd, hdc);
-	DeleteObject(SelectObject(hdc_kwadraty,bitmapa2));
+	DeleteObject(SelectObject(hdc_kwadraty,bitmapa));
 	HPEN Olowek, Piornik;
 	Olowek = CreatePen(PS_SOLID, 1, 0x00FF00);
 	Piornik = (HPEN)SelectObject(hdc_kwadraty, Olowek);
-	for(int y = 0; y < odchylenie.size() - wzor_w; ++y)
-		for(int x = 0; x < odchylenie[y].size() - wzor_h; ++x)
-			if(wyswietl(y, x) < tolerancja 
-				&& x+1 < odchylenie[y].size() - wzor_h && wyswietl(y, x+1) > wyswietl(y, x) 
-				&& x-1 >= 0 && wyswietl(y, x-1) > wyswietl(y, x) 
-				&& y+1 < odchylenie.size() - wzor_w && wyswietl(y+1, x) > wyswietl(y, x) 
-				&& y-1 >= 0 && wyswietl(y-1, x) > wyswietl(y, x))
+	for(int x = 0; x < tekst_w - wzor_w; ++x)
+		for(int y = 0; y < tekst_h - wzor_h; ++y)
+			if(wyswietl(x, y) < tolerancja 
+				&& x+1 < tekst_w - wzor_w && wyswietl(x+1, y) > wyswietl(x, y) 
+				&& x-1 >= 0 && wyswietl(x-1, y) > wyswietl(x, y) 
+				&& y+1 < tekst_h - wzor_h && wyswietl(x, y+1) > wyswietl(x, y) 
+				&& y-1 >= 0 && wyswietl(x, y-1) > wyswietl(x, y))
 			{
-				MoveToEx(hdc_kwadraty, y-wzor_w/2+wzor_w/2, x-wzor_h/2+wzor_h/2, NULL);
-				LineTo(hdc_kwadraty, y-wzor_w/2+wzor_w/2, x+wzor_h/2+1+wzor_h/2);
-				MoveToEx(hdc_kwadraty, y+wzor_w/2+wzor_w/2, x-wzor_h/2+wzor_h/2, NULL);
-				LineTo(hdc_kwadraty, y+wzor_w/2+wzor_w/2, x+wzor_h/2+1+wzor_h/2);
-				MoveToEx(hdc_kwadraty, y-wzor_w/2+wzor_w/2, x-wzor_h/2+wzor_h/2, NULL);
-				LineTo(hdc_kwadraty, y+wzor_w/2+1+wzor_w/2, x-wzor_h/2+wzor_h/2);
-				MoveToEx(hdc_kwadraty, y-wzor_w/2+wzor_w/2, x+wzor_h/2+wzor_h/2, NULL);
-				LineTo(hdc_kwadraty, y+wzor_w/2+1+wzor_w/2, x+wzor_h/2+wzor_h/2);
+				MoveToEx(hdc_kwadraty, x, y, NULL);
+				LineTo(hdc_kwadraty, x, y+wzor_h+1);
+				MoveToEx(hdc_kwadraty, x+wzor_w, y, NULL);
+				LineTo(hdc_kwadraty, x+wzor_w, y+wzor_h+1);
+				MoveToEx(hdc_kwadraty, x, y, NULL);
+				LineTo(hdc_kwadraty, x+wzor_w+1, y);
+				MoveToEx(hdc_kwadraty, x, y+wzor_h, NULL);
+				LineTo(hdc_kwadraty, x+wzor_w+1, y+wzor_h);
 			}
 	SelectObject(hdc_kwadraty, Piornik);
 	DeleteObject(Olowek);
@@ -346,13 +342,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		hButtonOpenObraz = CreateWindowEx(0, "BUTTON", "Wybierz obraz", WS_CHILD | WS_VISIBLE, 5, 5, 100, 28, hwnd, (HMENU)ID_BUTTON_OPEN_OBRAZ, hInst, NULL);
 		SendMessage(hButtonOpenObraz, WM_SETFONT, (WPARAM)hNormalFont, 0);
-		hStaticObraz = CreateWindowEx( 0, "STATIC", NULL, WS_CHILD | WS_VISIBLE |SS_LEFT, 110, 9, 200, 20, hwnd, NULL, hInst, NULL);
+		hStaticObraz = CreateWindowEx( 0, "STATIC", NULL, WS_CHILD | WS_VISIBLE |SS_LEFT, 110, 9, 155, 20, hwnd, NULL, hInst, NULL);
 		SendMessage(hStaticObraz, WM_SETFONT, (WPARAM)hNormalFont, 0);
 		SetWindowText(hStaticObraz, "nie wybrano pliku");
 
 		hButtonOpenWzor = CreateWindowEx(0, "BUTTON", "Wybierz wzór", WS_CHILD | WS_VISIBLE, 5, 38, 100, 28, hwnd, (HMENU)ID_BUTTON_OPEN_WZOR, hInst, NULL);
 		SendMessage(hButtonOpenWzor, WM_SETFONT, (WPARAM)hNormalFont, 0);
-		hStaticWzor = CreateWindowEx( 0, "STATIC", NULL, WS_CHILD | WS_VISIBLE |SS_LEFT, 110, 42, 200, 20, hwnd, NULL, hInst, NULL);
+		hStaticWzor = CreateWindowEx( 0, "STATIC", NULL, WS_CHILD | WS_VISIBLE |SS_LEFT, 110, 42, 155, 20, hwnd, NULL, hInst, NULL);
 		SendMessage(hStaticWzor, WM_SETFONT, (WPARAM)hNormalFont, 0);
 		SetWindowText(hStaticWzor, "nie wybrano pliku");
 
@@ -361,32 +357,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		hStaticInfo = CreateWindowEx( 0, "STATIC", NULL, WS_CHILD | WS_VISIBLE |SS_LEFT, 110, 75, 80, 20, hwnd, NULL, hInst, NULL);
 		SendMessage(hStaticInfo, WM_SETFONT, (WPARAM)hNormalFont, 0);
 
-		hButtonTrackbarTolerancja = CreateWindowEx(0, TRACKBAR_CLASS, "Trackbar Control", WS_CHILD | WS_VISIBLE | TBS_AUTOTICKS, 5, 104, 255, 28, hwnd, (HMENU)ID_TRACKBAR_TOLERANCJA, hInst, NULL);
+		hProgressBar = CreateWindowEx(0, PROGRESS_CLASS, NULL, WS_CHILD | WS_VISIBLE, 5, 104, 255, 20, hwnd,( HMENU ) 200, hInst, NULL);
+		SendMessage(hProgressBar, PBM_SETRANGE, 0 ,(LPARAM) MAKELONG(0, 255));
+
+		hButtonTrackbarTolerancja = CreateWindowEx(0, TRACKBAR_CLASS, "Trackbar Control", WS_CHILD | WS_VISIBLE | TBS_AUTOTICKS, 5, 129, 255, 28, hwnd, (HMENU)ID_TRACKBAR_TOLERANCJA, hInst, NULL);
 		SendMessage(GetDlgItem(hwnd,ID_TRACKBAR_TOLERANCJA), TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 255));
 		SendMessage(GetDlgItem(hwnd,ID_TRACKBAR_TOLERANCJA), TBM_SETPAGESIZE, 0,(LPARAM)1);
 		SendMessage(GetDlgItem(hwnd,ID_TRACKBAR_TOLERANCJA), TBM_SETSEL, (WPARAM)FALSE, (LPARAM)MAKELONG(0, 255)); 
 		SendMessage(GetDlgItem(hwnd,ID_TRACKBAR_TOLERANCJA), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)tolerancja);
-		hStaticTolerancja = CreateWindowEx( 0, "STATIC", NULL, WS_CHILD | WS_VISIBLE |SS_LEFT, 265, 108, 100, 20, hwnd, NULL, hInst, NULL);
+		hStaticTolerancja = CreateWindowEx( 0, "STATIC", NULL, WS_CHILD | WS_VISIBLE |SS_LEFT, 265, 133, 100, 20, hwnd, NULL, hInst, NULL);
 		SendMessage(hStaticTolerancja, WM_SETFONT, (WPARAM)hNormalFont, 0);
 		stringstream ss;
 		ss<<"tolerancja = "<<tolerancja;
 		SetWindowText(hStaticTolerancja,ss.str().c_str());
-		hCheckboxObraz = CreateWindowEx(0, "BUTTON", "dopasowanie", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 5, 137, 120, 28, hwnd, (HMENU)ID_CHECKBOX_OBRAZ, hInst, NULL);
+		hCheckboxObraz = CreateWindowEx(0, "BUTTON", "dopasowanie", WS_CHILD | WS_VISIBLE | BS_CHECKBOX, 5, 162, 120, 28, hwnd, (HMENU)ID_CHECKBOX_OBRAZ, hInst, NULL);
 		SendMessage(hCheckboxObraz, WM_SETFONT, (WPARAM)hNormalFont, 0);
-		CheckDlgButton(hwnd, ID_CHECKBOX_OBRAZ, BST_CHECKED);
+		CheckDlgButton(hwnd, ID_CHECKBOX_OBRAZ, BST_UNCHECKED);
+		EnableWindow(hCheckboxObraz, FALSE);
+
+		image::init();
 		break;
 	}
 	case WM_PAINT:
 	{
 		PAINTSTRUCT ps;
 		HDC hdc=BeginPaint(hwnd, &ps);
+		if(WzorWybrany)
+			BitBlt(hdc, WZOR_X, WZOR_Y, wzor_w, wzor_h, hdc_wzor, 0, 0, SRCCOPY);
+		if(ObrazWybrany && !Zakonczono)
+			BitBlt(hdc, OBRAZ_X, OBRAZ_Y, tekst_w, tekst_h, hdc_obraz, 0, 0, SRCCOPY);
 		if(Zakonczono)
 		{
 			HDC hdc_pamieciowy=CreateCompatibleDC(hdc);
 			HBITMAP bitmapa = CreateCompatibleBitmap(hdc,tekst_w,tekst_h);
 			DeleteObject(SelectObject(hdc_pamieciowy,bitmapa));
 			if(WybranoDopasowanie)
-				BitBlt(hdc_pamieciowy, wzor_w/2, wzor_h/2, odchylenie.size() - wzor_h, odchylenie[1].size() - wzor_w, hdc_dopasowanie, 0, 0, SRCCOPY);
+				BitBlt(hdc_pamieciowy, wzor_w/2, wzor_h/2, tekst_w - wzor_w, tekst_h - wzor_h, hdc_dopasowanie, 0, 0, SRCCOPY);
 			else
 				BitBlt(hdc_pamieciowy, 0, 0, tekst_w, tekst_h, hdc_obraz, 0, 0, SRCCOPY);
 			TransparentBlt(hdc_pamieciowy, 0, 0, tekst_w, tekst_h, hdc_kwadraty, 0, 0, tekst_w, tekst_h, 0);
@@ -415,8 +421,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			ofn.lpstrDefExt = "bmp";
 			if(GetOpenFileName(&ofn))
 			{
+				EnableWindow(hCheckboxObraz, FALSE);
+				CheckDlgButton(hwnd, ID_CHECKBOX_OBRAZ, BST_UNCHECKED);
+				WybranoDopasowanie=FALSE;
 				ObrazWybrany = TRUE;
+				obraz.from_file(sSciezkaObraz, 3);
+				tekst_w = obraz.get_size().w;
+				tekst_h = obraz.get_size().h;
+				for(int y = 0; y < tekst_h; ++y)
+					for(int x = 0; x < tekst_w; ++x)
+						for(int k=0;k<3;k++)
+							tekst[x][y][k] = (*obraz(x, y, k)) / 255.0;
+				HDC hdc=GetDC(hwnd);
+				hdc_obraz=CreateCompatibleDC(hdc);
+				HBITMAP bitmapa = CreateCompatibleBitmap(hdc,tekst_w,tekst_h);
+				DeleteObject(SelectObject(hdc_obraz,bitmapa));
+				for(int y = 0; y < tekst_h; ++y)
+					for(int x = 0; x < tekst_w; ++x)
+						SetPixel(hdc_obraz, x, y, RGB(tekst[x][y][0]*255, tekst[x][y][1]*255, tekst[x][y][2]*255));
+				ReleaseDC(hwnd, hdc);
 				SetWindowText(hStaticObraz, sNazwaPlikuObraz);
+				InvalidateRect(hwnd, NULL, TRUE);
 			}
 			break;
 		}
@@ -436,8 +461,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			ofn.lpstrDefExt = "bmp";
 			if(GetOpenFileName(&ofn))
 			{
+				EnableWindow(hCheckboxObraz, FALSE);
+				CheckDlgButton(hwnd, ID_CHECKBOX_OBRAZ, BST_UNCHECKED);
+				WybranoDopasowanie=FALSE;
 				WzorWybrany = TRUE;
+				wzorzec.from_file(sSciezkaWzor, 3);
+				wzor_w = wzorzec.get_size().w;
+				wzor_h = wzorzec.get_size().h;
+				for(int y = 0; y < wzor_h; ++y)
+					for(int x = 0; x < wzor_w; ++x)
+						for(int k=0;k<3;k++)
+							wzor[x][y][k] = (*wzorzec(x, y, k))/255.0;
+				HDC hdc=GetDC(hwnd);
+				hdc_wzor=CreateCompatibleDC(hdc);
+				HBITMAP bitmapa = CreateCompatibleBitmap(hdc,wzor_w,wzor_h);
+				DeleteObject(SelectObject(hdc_wzor,bitmapa));
+				for(int y = 0; y < wzor_h; ++y)
+					for(int x = 0; x < wzor_w; ++x)
+						SetPixel(hdc_wzor, x, y, RGB(wzor[x][y][0]*255, wzor[x][y][1]*255, wzor[x][y][2]*255));
+				ReleaseDC(hwnd, hdc);
 				SetWindowText(hStaticWzor, sNazwaPlikuWzor);
+				InvalidateRect(hwnd, NULL, TRUE);
 			}
 			break;
 		}
@@ -446,30 +490,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if(ObrazWybrany && WzorWybrany)
 			{
 				SetWindowText(hStaticInfo, "czekaj...");
-				image::init();
-				obraz.from_file(sSciezkaObraz, 1);
-				wzorzec.from_file(sSciezkaWzor, 1);
-				tekst_w = obraz.get_size().w;
-				tekst_h = obraz.get_size().h;
-				wzor_w = wzorzec.get_size().w;
-				wzor_h = wzorzec.get_size().h;
-				rozpoznawaj(hwnd);
+				rozpoznawaj();
 				generuj_kwadaraty(hwnd);
 				HDC hdc=GetDC(hwnd);
-				hdc_obraz=CreateCompatibleDC(hdc);
-				HBITMAP bitmapa = CreateCompatibleBitmap(hdc,tekst_w,tekst_h);
-				DeleteObject(SelectObject(hdc_obraz,bitmapa));
-				for(int y = 0; y < tekst_h; ++y)
-					for(int x = 0; x < tekst_w; ++x)
-						SetPixel(hdc_obraz, x, y, RGB(tekst[x][y]*255, tekst[x][y]*255, tekst[x][y]*255));
 				hdc_dopasowanie=CreateCompatibleDC(hdc);
-				HBITMAP bitmapa2 = CreateCompatibleBitmap(hdc,tekst_w,tekst_h);
-				DeleteObject(SelectObject(hdc_dopasowanie,bitmapa2));
-				for(int y = 0; y < odchylenie.size() - wzor_h; ++y)
-					for(int x = 0; x < odchylenie[y].size() - wzor_w; ++x)
-						SetPixel(hdc_dopasowanie, y, x, RGB(wyswietl(y, x), wyswietl(y, x), wyswietl(y, x)));
+				HBITMAP bitmapa = CreateCompatibleBitmap(hdc,tekst_w,tekst_h);
+				DeleteObject(SelectObject(hdc_dopasowanie,bitmapa));
+				for(int y = 0; y < tekst_h - wzor_h; ++y)
+					for(int x = 0; x < tekst_w - wzor_w; ++x)
+						SetPixel(hdc_dopasowanie, x, y, RGB(wyswietl(x, y), wyswietl(x, y), wyswietl(x, y)));
 				ReleaseDC(hwnd, hdc);
 				SetWindowText(hStaticInfo, "zakończono");
+				Zakonczono = TRUE;
+				EnableWindow(hCheckboxObraz, TRUE);
+				CheckDlgButton(hwnd, ID_CHECKBOX_OBRAZ, BST_CHECKED);
+				WybranoDopasowanie=TRUE;
+				InvalidateRect(hwnd, NULL, TRUE);
 			}
 			else
 				if(ObrazWybrany == FALSE && WzorWybrany == FALSE)
@@ -487,14 +523,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
 				CheckDlgButton(hwnd, ID_CHECKBOX_OBRAZ, BST_UNCHECKED);
 				WybranoDopasowanie = FALSE;
-				SetWindowText(hCheckboxObraz, "obraz");
 				InvalidateRect(hwnd, NULL, FALSE);
 			}
 			else
 			{
 				CheckDlgButton(hwnd, ID_CHECKBOX_OBRAZ, BST_CHECKED);
 				WybranoDopasowanie = TRUE;
-				SetWindowText(hCheckboxObraz, "dopasowanie");
 				InvalidateRect(hwnd, NULL, FALSE);
 			}
 			break;
@@ -571,6 +605,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	InitCommonControls();
+	INITCOMMONCONTROLSEX icc;
+	icc.dwSize = sizeof(INITCOMMONCONTROLSEX);
+	icc.dwICC = ICC_BAR_CLASSES;
+	InitCommonControlsEx(& icc);
 	hInst=hInstance;
 	LPSTR MainClassName = "ClassWndMain";
     WNDCLASSEX wc;
